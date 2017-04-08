@@ -1,0 +1,8 @@
+{ margin: 0; padding: 0; box-sizing: border-box; }
+body { font: 13px Helvetica, Arial; background-color: #e8e8e8	}
+.sendDiv { background: #1b0093; padding: 3px; position: fixed; bottom: 4px; width: 98.5%;}
+.sendTextBox { border: 0; padding: 20px; width: 97%; color: #009216; font-weight: bold; font-size: 20px;}
+#messages { list-style-type: none; margin: 0; padding: 0; }
+#messages li { padding: 5px 10px; }
+#messages li:nth-child(odd) { background: #eee; }
+#notifyUser { position: fixed; bottom: 42px; width: 100%; }
