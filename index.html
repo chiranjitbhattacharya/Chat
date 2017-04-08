@@ -1,0 +1,181 @@
+<!DOCTYPE html>  
+<html lang="en">
+<head>
+<title>Chat Room</title>
+  <script src="/socket.io/socket.io.js"></script>  
+  <link rel="stylesheet" href="bootstrap.css">
+
+  <link rel="stylesheet" href="style.css">
+  <script src="jquery.js"></script>
+  <script src="bootstrap.js"></script>
+    
+ 
+
+    <script>
+        <!-- We will add this later -->
+$(document).ready(function(){ 
+
+          var socket = io.connect("http://localhost:3000");
+          var nickName;
+          var gender;
+
+
+            $('#m').focus(function() {
+              console.log("Chat message textbox focused.");
+              socket.emit("typing", "");
+            });
+
+            $('#m').blur(function() {
+              console.log("Chat message textbox blur.");
+              socket.emit("stopedTyping", "");
+            });
+
+             
+            $('#myModal').modal({backdrop: 'static', keyboard: false});
+
+
+
+        $('#nickName').keypress(function(e) {
+             nickName = $('#nickName').val();
+            var key   = e.which;
+            if (key == 13) // the enter key code
+            {
+                if(nickName === null || nickName === '') {
+                    return false;
+                } else {
+                    closeModal();
+                    $('#genderSelectionModal').modal({backdrop: 'static', keyboard: false});
+
+                    $('input:radio[name=gender]').change(function() {
+                        gender = this.value;
+                        socket.emit("join", nickName, gender);
+                        $('#clientName').html(nickName);
+                        closeGenderSelectionModal();
+                        $('#m').focus();
+                    });
+                }
+
+                return false;
+            }
+          });
+
+        // close the modal
+        function closeModal() {
+            $('#myModal').modal('hide');
+        }
+
+        function closeGenderSelectionModal() {
+            $('#genderSelectionModal').modal('hide');
+        }
+
+
+        $('#m').keypress(function(e) {
+            var key = e.which;
+            if (key == 13) // the enter key code
+            {
+              enterEvent();
+              return false;
+            }
+          });
+    
+        
+       
+        var enterEvent = function() {
+
+        //msg from user
+		    var message = $('#m').val();
+		      if(message != '') {
+        		  socket.emit("send", message);
+
+                  $('#m').val('');
+                  $('#m').focus();
+        	   }
+		    };
+    
+    		socket.on("chat", function(name, timestamp, msg, avatarPath) {
+              if(nickName === name) {
+                var newMsg = '<li class="self"><div class="avatar"><img src="'+avatarPath +'" draggable="false"/></div><div class="msg"><p style="font-size: 12px; color: #37ff00;">'+ name + '</p><p style="font-size: 15px;">'+ msg + '</p><time style="color: blue; font-size: 10px;">' + timestamp + '</time></div></li>';
+                  var message = $('#messages').append(newMsg);
+
+                  $("html,body").animate({scrollTop: $('ol#messages li:last').offset().top - 30});
+              } else {
+                  $('#messages').append('<li class="other"><div class="avatar"><img src="'+avatarPath +'" draggable="false"/></div><div class="msg"><p style="font-size: 12px; color: #37ff00;">'+ name + '</p><p style="font-size: 15px;">'+ msg + '</p><time style="color: blue; font-size: 10px;">' + timestamp + '</time></div></li>');
+                  $("html,body").animate({scrollTop: $('ol#messages li:last').offset().top - 30});
+              }
+  	    });
+
+        socket.on("update", function(msg){
+           $('#messages').append('<p style="position: relative;display: inherit;text-align: center;font-size: 13px;color: black;background: #73dfef;line-height: 30px;border-radius: 100px;margin: 7px 35%;height: 30px;width: 30%;box-shadow: 0px 1px 0px rgba(0,0,0,.05), 0px -1px 0px rgba(0,0,0,.05), inset 0px 1px 0px rgba(255,255,255,.02), inset 0px -1px 0px rgba(255,255,255,.02);text-shadow: 0px -1px 0px rgba(0,0,0,.1), 0px 1px 0px rgba(255,255,255,.05);cursor: default;-webkit-touch-callout: none;-webkit-user-select: none;-moz-user-select: none;-ms-user-select: none;transition: all .2s cubic-bezier(0.565, -0.260, 0.255, 1.410);">' + msg +'<time>18:09</time></p>');
+        });
+
+        socket.on("typing", function(whoIsTyping){
+           $('#typingInfo').html(whoIsTyping);
+        });
+
+        socket.on("stopedTyping", function(a) {
+          $('#typingInfo').html('');
+        });
+
+    });
+</script>
+</head>
+
+
+<body> 
+   
+
+    <div class="menu">
+            <div class="name" id="clientName"></div>
+            <div style="position: relative; left: 45%; font-weight: bold; top: 15px; color: #37ff00;" id="typingInfo"></div>
+    </div>
+    <div id="chatDiv">
+    <ol class="chat" id="messages"></ol>
+    </div>
+    <input class="textarea" id="m" type="text" placeholder="Type here!"/><div class="emojis" >
+      
+</div>
+
+
+
+<div id="myModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Welcome To Chat Room</h4>
+      </div>
+      <div class="modal-body">
+        <div class="input-group">
+          <span class="input-group-addon">Nick Name</span>
+          <input id="nickName" type="text" class="form-control" name="text-nickName" placeholder="Name please.." autofocus>
+        </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<div id="genderSelectionModal" class="modal fade" role="dialog">
+  <div class="modal-dialog">
+
+    <!-- Modal content-->
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">Your Gender?</h4>
+      </div>
+      <div class="modal-body">
+        <label class="radio-inline"><input type="radio" value="male" name="gender">Male</label>
+        <label class="radio-inline"><input type="radio" value="female" name="gender">Female</label>
+
+    </div>
+
+  </div>
+</div>
+</div>
+      
+    
+  </body>
+</html>
